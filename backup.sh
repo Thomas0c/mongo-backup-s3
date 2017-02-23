@@ -9,12 +9,14 @@ set -e
 : ${AWS_ACCESS_KEY_ID:?}
 : ${AWS_SECRET_ACCESS_KEY:?}
 : ${DATE_FORMAT:?}
+: ${PASS:?}
 : ${FILE_PREFIX:?}
 
 FOLDER=/backup
 DUMP_OUT=dump
 
 FILE_NAME=${FILE_PREFIX}$(date -u +${DATE_FORMAT}).tar.gz
+ENC_FILE_NAME=${FILE_PREFIX}$(date -u +${DATE_FORMAT}).tar.gz.gpg
 
 echo "Creating backup folder..."
 
@@ -28,12 +30,17 @@ echo "Compressing backup..."
 
 tar -zcvf ${FILE_NAME} ${DUMP_OUT} && rm -fr ${DUMP_OUT}
 
+echo "Encrypting file..."
+
+gpg --cipher-algo AES256 --passphrase ${PASS} --symmetric ${FILE_NAME}
+
 echo "Uploading to S3..."
 
-aws s3api put-object --server-side-encryption=AES256 --bucket ${S3_BUCKET} --key ${S3_PATH}${FILE_NAME} --body ${FILE_NAME}
+aws s3api put-object --server-side-encryption=AES256 --bucket ${S3_BUCKET} --key ${S3_PATH}${FILE_NAME} --body ${ENC_FILE_NAME}
 
-echo "Removing backup file..."
+echo "Removing backup files..."
 
 rm -f ${FILE_NAME}
+rm -f ${ENC_FILE_NAME}
 
 echo "Done!"

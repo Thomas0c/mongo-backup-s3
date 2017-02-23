@@ -22,6 +22,7 @@ RUN chmod +x /app/run.py
 
 # Default environment variables
 ENV BACKUP_INTERVAL 1
+ENV PASS ABC123
 ENV BACKUP_TIME 2:00
 ENV DATE_FORMAT %Y%m%d-%H%M%S
 ENV FILE_PREFIX backup-
